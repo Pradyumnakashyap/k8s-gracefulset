@@ -11,8 +11,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	appsv1alpha1 "github.com/infor/gracefulset/api/v1alpha1"
-	"github.com/infor/gracefulset/internal/controller"
+	appsv1alpha1 "github.com/gracefulset-io/gracefulset/api/v1alpha1"
+	"github.com/gracefulset-io/gracefulset/internal/controller"
 )
 
 var (

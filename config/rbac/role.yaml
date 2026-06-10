@@ -3,13 +3,13 @@ kind: ClusterRole
 metadata:
   name: gracefulset-controller
 rules:
-  - apiGroups: ["apps.infor.com"]
+  - apiGroups: ["apps.gracefulset.io"]
     resources: ["gracefulsets"]
     verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
-  - apiGroups: ["apps.infor.com"]
+  - apiGroups: ["apps.gracefulset.io"]
     resources: ["gracefulsets/status"]
     verbs: ["get", "update", "patch"]
-  - apiGroups: ["apps.infor.com"]
+  - apiGroups: ["apps.gracefulset.io"]
     resources: ["gracefulsets/finalizers"]
     verbs: ["update"]
   - apiGroups: [""]

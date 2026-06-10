@@ -1,4 +1,4 @@
-module github.com/infor/gracefulset
+module github.com/gracefulset-io/gracefulset
 
 go 1.22
 

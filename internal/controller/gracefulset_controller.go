@@ -16,13 +16,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	appsv1alpha1 "github.com/infor/gracefulset/api/v1alpha1"
+	appsv1alpha1 "github.com/gracefulset-io/gracefulset/api/v1alpha1"
 )
 
 const (
-	versionLabel = "gracefulset.infor.com/version"
-	ownerLabel   = "gracefulset.infor.com/name"
-	finalizerName = "gracefulset.infor.com/finalizer"
+	versionLabel = "gracefulset.io/version"
+	ownerLabel   = "gracefulset.io/name"
+	finalizerName = "gracefulset.io/finalizer"
 )
 
 // GracefulSetReconciler reconciles a GracefulSet object
@@ -31,9 +31,9 @@ type GracefulSetReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-// +kubebuilder:rbac:groups=apps.infor.com,resources=gracefulsets,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=apps.infor.com,resources=gracefulsets/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=apps.infor.com,resources=gracefulsets/finalizers,verbs=update
+// +kubebuilder:rbac:groups=apps.gracefulset.io,resources=gracefulsets,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=apps.gracefulset.io,resources=gracefulsets/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=apps.gracefulset.io,resources=gracefulsets/finalizers,verbs=update
 // +kubebuilder:rbac:groups="",resources=pods,verbs=get;list;watch;create;delete
 
 func (r *GracefulSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {

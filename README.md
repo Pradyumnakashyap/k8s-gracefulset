@@ -6,7 +6,7 @@ A Kubernetes CRD and controller for managing stateful applications that require 
 
 GracefulSet creates new pods when the spec changes (version upgrade) but **never kills existing pods**. Old pods continue running until they complete naturally, a TTL expires, or they're manually drained.
 
-This solves the problem of upgrading applications that hold long-lived sessions (like M3 Foundation nodes) where killing a pod means losing user sessions.
+This solves the problem of upgrading applications that hold long-lived sessions where killing a pod means losing active user connections or in-progress work.
 
 ## How it works
 
@@ -30,11 +30,11 @@ After:   [v2-pod-d] [v2-pod-e] [v2-pod-f]    (v1 pods exited naturally)
 ## Usage
 
 ```yaml
-apiVersion: apps.infor.com/v1alpha1
+apiVersion: apps.gracefulset.io/v1alpha1
 kind: GracefulSet
 metadata:
-  name: foundation-interactive
-  namespace: m3-apps
+  name: my-app
+  namespace: default
 spec:
   replicas: 3
   version: "2024.1.0"
@@ -44,15 +44,15 @@ spec:
     maxDrainingPods: 10      # safety limit on old pods
   selector:
     matchLabels:
-      app: foundation-interactive
+      app: my-app
   template:
     metadata:
       labels:
-        app: foundation-interactive
+        app: my-app
     spec:
       containers:
-        - name: foundation
-          image: registry/foundation:2024.1.0
+        - name: app
+          image: registry/my-app:2024.1.0
           ports:
             - containerPort: 10080
 ```
