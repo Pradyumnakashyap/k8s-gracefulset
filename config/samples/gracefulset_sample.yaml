@@ -3,6 +3,7 @@ kind: Namespace
 metadata:
   name: gracefulset-test
 ---
+# Basic example: drain by waiting for the container to exit
 apiVersion: apps.gracefulset.io/v1alpha1
 kind: GracefulSet
 metadata:
@@ -38,3 +39,44 @@ spec:
               memory: 64Mi
             limits:
               memory: 128Mi
+---
+# Session-aware example: drain by polling an HTTP endpoint until in-flight work is zero
+apiVersion: apps.gracefulset.io/v1alpha1
+kind: GracefulSet
+metadata:
+  name: session-app
+  namespace: gracefulset-test
+spec:
+  replicas: 3
+  version: "2024.1.0"
+  drainPolicy:
+    mode: WaitForDrain
+    ttl: 24h                 # safety cap: force-remove a pod still draining after 24h
+    maxDrainingPods: 10
+    drainCheck:
+      path: /drain-status
+      port: 8080
+      scheme: HTTP
+      periodSeconds: 30
+      jsonField: inflight
+  selector:
+    matchLabels:
+      app: session-app
+  template:
+    metadata:
+      labels:
+        app: session-app
+        gracefulset.io/name: session-app
+    spec:
+      containers:
+        - name: app
+          image: registry/session-app:2024.1.0
+          ports:
+            - containerPort: 8080
+              name: http
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              memory: 512Mi
