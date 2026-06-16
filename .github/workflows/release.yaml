@@ -80,7 +80,7 @@ jobs:
       - name: Update Helm repo index
         run: |
           cp .helm-packages/*.tgz gh-pages/
-          helm repo index gh-pages --url https://${{ github.repository_owner }}.github.io/k8s-gracefulset
+          helm repo index gh-pages --url https://gracefulset.github.io/k8s-gracefulset
 
       - name: Push to gh-pages
         run: |
