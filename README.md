@@ -205,26 +205,60 @@ status:
 ## Installation
 
 ```bash
-# Install CRD
-kubectl apply -f config/crd/gracefulset.yaml
+# Add the Helm repo
+helm repo add gracefulset https://gracefulset.github.io/k8s-gracefulset
+helm repo update
 
-# Install RBAC + controller
-kubectl apply -f config/rbac/role.yaml
-kubectl apply -f config/manager/deployment.yaml
+# Install the controller (CRD is included automatically)
+helm install gracefulset gracefulset/gracefulset-controller -n gracefulset-system --create-namespace
 ```
 
-The controller deployment runs 2 replicas with leader election enabled, so only one instance reconciles at a time while the other stands by.
+### Configuration
+
+Override defaults via `--set` or a values file:
+
+```bash
+helm install gracefulset gracefulset/gracefulset-controller \
+  -n gracefulset-system --create-namespace \
+  --set replicaCount=2 \
+  --set image.tag=0.1.0 \
+  --set nodeSelector.dedicated=system \
+  --set tolerations[0].key=dedicated \
+  --set tolerations[0].value=system \
+  --set tolerations[0].effect=NoSchedule
+```
+
+Available values:
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `replicaCount` | 2 | Controller replicas (with leader election) |
+| `image.repository` | `pradyumnakashyap/gracefulset-controller` | Container image |
+| `image.tag` | `0.1.0` | Image tag |
+| `leaderElection.enabled` | `true` | Enable leader election for HA |
+| `resources.requests.cpu` | `100m` | CPU request |
+| `resources.requests.memory` | `128Mi` | Memory request |
+| `nodeSelector` | `{}` | Node selector for controller pods |
+| `tolerations` | `[]` | Tolerations for controller pods |
+
+### Uninstall
+
+```bash
+helm uninstall gracefulset -n gracefulset-system
+# CRDs are not removed by helm uninstall. To remove:
+kubectl delete crd gracefulsets.apps.gracefulset.io
+```
 
 ## Architecture
 
 ```
 ┌──────────────────────────────────────────────┐
-│  GracefulSet Controller (Deployment, 2x HA)   │
+│  GracefulSet Controller (Deployment, 2x HA)  │
 │                                              │
 │  Watches: GracefulSet resources              │
 │  Creates: Pods (owned by the GracefulSet)    │
-│  Manages: version tracking, scale-down drain, │
-│           drain policy lifecycle              │
+│  Manages: version tracking, scale-down drain,│
+│           drain policy lifecycle             │
 └──────────────────────────────────────────────┘
 ```
 
@@ -241,17 +275,20 @@ The controller manages these labels on pods it creates:
 ## Project Structure
 
 ```
-gracefulset/
-├── api/v1alpha1/            CRD type definitions + deepcopy
-├── internal/controller/     Reconciliation logic
-├── config/
-│   ├── crd/                 CRD manifest
-│   ├── rbac/                RBAC permissions
-│   ├── manager/             Controller deployment
-│   └── samples/             Example GracefulSet resources
+k8s-gracefulset/
+├── api/v1alpha1/                        CRD type definitions + deepcopy
+├── internal/controller/                 Reconciliation logic
+├── charts/gracefulset-controller/       Helm chart
+│   ├── crds/                            CRD manifest (auto-installed by Helm)
+│   ├── templates/                       Deployment + RBAC templates
+│   ├── Chart.yaml
+│   └── values.yaml
+├── examples/                            Sample GracefulSet resources
+├── .github/workflows/release.yaml       CI: build image + publish chart on tag
 ├── Dockerfile
 ├── Makefile
-└── main.go
+├── main.go
+└── go.mod
 ```
 
 ## Development
@@ -263,16 +300,29 @@ go mod tidy
 # Compile
 go build ./...
 
-# Install the CRD, then run the controller locally against your kubeconfig
-kubectl apply -f config/crd/gracefulset.yaml
+# Install the CRD into your cluster (from the chart)
+kubectl apply -f charts/gracefulset-controller/crds/gracefulset.yaml
+
+# Run the controller locally against your kubeconfig
 go run ./main.go
 
-# Build and push the container image
-make docker-build docker-push IMG=<registry>/gracefulset-controller:<tag>
-
-# Deploy to cluster
-make deploy IMG=<registry>/gracefulset-controller:<tag>
+# Build the container image locally
+make docker-build IMG=pradyumnakashyap/gracefulset-controller:dev
 ```
+
+## Releasing
+
+Tag a version to trigger the CI pipeline:
+
+```bash
+git tag v0.2.0
+git push origin v0.2.0
+```
+
+This automatically:
+1. Builds multi-arch Docker image → pushes to Docker Hub
+2. Packages the Helm chart → publishes to GitHub Pages
+3. Creates a GitHub Release with auto-generated notes
 
 ## Roadmap
 
