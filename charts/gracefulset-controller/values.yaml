@@ -3,7 +3,7 @@
 replicaCount: 2
 
 image:
-  repository: gracefulsetio/gracefulset-controller
+  repository: pradyumnakashyap/gracefulset-controller
   tag: "0.1.0"
   pullPolicy: IfNotPresent
 
